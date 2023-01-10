@@ -2,6 +2,7 @@ package practice.zhuang.mybatis.binding;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+import practice.zhuang.mybatis.session.SqlSession;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -17,9 +18,9 @@ import java.util.Map;
 public class MapperProxy implements InvocationHandler {
 
     private Class<?> mapperInterface;
-    private Map<String, String> sqlSession;
+    private SqlSession sqlSession;
 
-    public MapperProxy(Class<?> mapperInterface, Map<String, String> sqlSession) {
+    public MapperProxy(Class<?> mapperInterface, SqlSession sqlSession) {
         this.mapperInterface = mapperInterface;
         this.sqlSession = sqlSession;
     }
@@ -30,6 +31,6 @@ public class MapperProxy implements InvocationHandler {
             method.invoke(this, args);
         }
         String methodName = StrUtil.join(StrUtil.DOT, mapperInterface.getName(), method.getName());
-        return sqlSession.get(methodName);
+        return sqlSession.selectOne(methodName);
     }
 }
