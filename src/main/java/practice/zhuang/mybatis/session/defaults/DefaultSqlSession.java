@@ -1,6 +1,8 @@
 package practice.zhuang.mybatis.session.defaults;
 
 import practice.zhuang.mybatis.binding.MapperRegistry;
+import practice.zhuang.mybatis.mapping.MappedStatement;
+import practice.zhuang.mybatis.session.Configuration;
 import practice.zhuang.mybatis.session.SqlSession;
 
 /**
@@ -10,24 +12,26 @@ import practice.zhuang.mybatis.session.SqlSession;
  */
 public class DefaultSqlSession implements SqlSession {
 
-    private MapperRegistry mapperRegistry;
+    private Configuration configuration;
 
-    public DefaultSqlSession(MapperRegistry mapperRegistry) {
-        this.mapperRegistry = mapperRegistry;
+    public DefaultSqlSession(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
     public <T> T selectOne(String statementId) {
-        return (T)("被代理 " + statementId);
+        MappedStatement statement = configuration.getMappedStatement(statementId);
+        return (T) ("你被代理了！" + "\n方法：" + statement);
     }
 
     @Override
     public <T> T selectOne(String statementId, Object parameter) {
-        return (T)("被代理 " + statementId);
+        MappedStatement statement = configuration.getMappedStatement(statementId);
+        return (T) ("你被代理了！" + "\n方法：" + statement);
     }
 
     @Override
     public <T> T getMapper(Class<T> mapperInterface) {
-        return mapperRegistry.getMapper(mapperInterface, this);
+        return configuration.getMapper(mapperInterface, this);
     }
 }

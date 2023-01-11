@@ -7,6 +7,18 @@
     <groupId>practice.zhuang</groupId>
     <artifactId>my-tiny-mybatis</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <properties>
         <lombok.version>1.18.24</lombok.version>
@@ -15,6 +27,7 @@
         <log4j.version>2.19.0</log4j.version>
         <slf4j.version>2.0.5</slf4j.version>
         <log4j-slf4j2.version>2.19.0</log4j-slf4j2.version>
+        <dom4j.version>2.1.3</dom4j.version>
     </properties>
 
     <dependencies>
@@ -58,6 +71,12 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
             <version>${log4j-slf4j2.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>${dom4j.version}</version>
         </dependency>
 
     </dependencies>

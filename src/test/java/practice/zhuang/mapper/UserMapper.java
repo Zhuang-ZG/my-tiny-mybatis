@@ -1,4 +1,6 @@
-package practice.zhuang.entity;
+package practice.zhuang.mapper;
+
+import practice.zhuang.entity.User;
 
 /**
  * @author: ZhuangZG

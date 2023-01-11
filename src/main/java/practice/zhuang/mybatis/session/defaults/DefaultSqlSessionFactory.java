@@ -1,6 +1,7 @@
 package practice.zhuang.mybatis.session.defaults;
 
 import practice.zhuang.mybatis.binding.MapperRegistry;
+import practice.zhuang.mybatis.session.Configuration;
 import practice.zhuang.mybatis.session.SqlSession;
 import practice.zhuang.mybatis.session.SqlSessionFactory;
 
@@ -11,14 +12,14 @@ import practice.zhuang.mybatis.session.SqlSessionFactory;
  */
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
-    private MapperRegistry mapperRegistry;
+    private Configuration configuration;
 
-    public DefaultSqlSessionFactory(MapperRegistry mapperRegistry) {
-        this.mapperRegistry = mapperRegistry;
+    public DefaultSqlSessionFactory(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
     public SqlSession openSession() {
-        return new DefaultSqlSession(mapperRegistry);
+        return new DefaultSqlSession(configuration);
     }
 }

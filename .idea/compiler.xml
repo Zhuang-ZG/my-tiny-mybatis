@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="my-tiny-mybatis" target="11" />
+      <module name="my-tiny-mybatis" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>
