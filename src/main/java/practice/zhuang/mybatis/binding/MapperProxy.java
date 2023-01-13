@@ -8,6 +8,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author: ZhuangZG
@@ -19,6 +21,7 @@ public class MapperProxy implements InvocationHandler {
 
     private Class<?> mapperInterface;
     private SqlSession sqlSession;
+    private Map<Method, MapperMethod> cacheMethods = new ConcurrentHashMap<>();
 
     public MapperProxy(Class<?> mapperInterface, SqlSession sqlSession) {
         this.mapperInterface = mapperInterface;
@@ -30,7 +33,16 @@ public class MapperProxy implements InvocationHandler {
         if (method.getDeclaringClass().equals(Object.class)) {
             method.invoke(this, args);
         }
-        String methodName = StrUtil.join(StrUtil.DOT, mapperInterface.getName(), method.getName());
-        return sqlSession.selectOne(methodName);
+        MapperMethod mapperMethod = cacheMethod(method);
+        return mapperMethod.execute(sqlSession, args);
+    }
+
+    public MapperMethod cacheMethod(Method method) {
+
+        MapperMethod mapperMethod = cacheMethods.get(method);
+        if (Objects.isNull(mapperMethod)) {
+            mapperMethod = new MapperMethod(method, sqlSession.getConfiguration(), mapperInterface);
+        }
+        return mapperMethod;
     }
 }

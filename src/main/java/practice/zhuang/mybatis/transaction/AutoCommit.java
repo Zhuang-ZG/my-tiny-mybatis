@@ -1,4 +1,4 @@
-package practice.zhuang.entity;
+package practice.zhuang.mybatis.transaction;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,20 +7,15 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author: ZhuangZG
- * @date 2023/1/11 13:52
+ * @date 2023/1/11 17:22
  * @Description:
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public final class AutoCommit {
 
-    private Long id;
+    private boolean autoCommit;
 
-    private String userId;
-
-    private String userHead;
-
-    private String userName;
 }

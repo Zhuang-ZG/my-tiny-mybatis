@@ -9,6 +9,6 @@ import practice.zhuang.entity.User;
  */
 public interface UserMapper {
 
-    String find();
+    User find(String id);
 
 }

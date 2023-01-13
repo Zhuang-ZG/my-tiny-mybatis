@@ -1,20 +1,24 @@
 package practice.zhuang.mybatis.builder.xml;
 
+import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import practice.zhuang.mybatis.builder.BaseBuilder;
+import practice.zhuang.mybatis.datasource.DataSourceFactory;
 import practice.zhuang.mybatis.io.Resources;
+import practice.zhuang.mybatis.mapping.BoundSql;
+import practice.zhuang.mybatis.mapping.Environment;
 import practice.zhuang.mybatis.mapping.MappedStatement;
 import practice.zhuang.mybatis.mapping.SqlCommandType;
 import practice.zhuang.mybatis.session.Configuration;
+import practice.zhuang.mybatis.transaction.TransactionFactory;
+import practice.zhuang.mybatis.type.TypeAliasesRegistry;
 
+import javax.sql.DataSource;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,8 +45,8 @@ public class XmlConfigurationBuilder extends BaseBuilder {
     public Configuration parse() {
         try {
             parseMapper(root.element("mappers"));
-
-            // TODO 解析 数据源标签 和 别名标签
+            parseTypeAlias(root.element("typeAliases"));
+            parseEnvironment(root.element("environments"));
 
         } catch (Exception e) {
             throw new RuntimeException("parse XML file failed.");
@@ -52,7 +56,7 @@ public class XmlConfigurationBuilder extends BaseBuilder {
     }
 
     /**
-     * solve mappers tag
+     * resolve mappers tag of XML
      * @param mappersElement
      * @return
      */
@@ -60,8 +64,8 @@ public class XmlConfigurationBuilder extends BaseBuilder {
         if (Objects.isNull(mappersElement)) {
             return;
         }
-        List<Element> elementList = mappersElement.elements("mapper");
-        for (Element element : elementList) {
+        List<Element> mapperElements = mappersElement.elements("mapper");
+        for (Element element : mapperElements) {
 
             String resource = element.attributeValue("resource");
             Reader reader = Resources.readAsReader(resource);
@@ -72,8 +76,8 @@ public class XmlConfigurationBuilder extends BaseBuilder {
             String namespace = mapperRootElement.attributeValue("namespace");
 
             // SELECT
-            List<Element> selectElementList = mapperRootElement.elements("select");
-            for (Element selectElement : selectElementList) {
+            List<Element> selectElements = mapperRootElement.elements("select");
+            for (Element selectElement : selectElements) {
 
                 String statementId = selectElement.attributeValue("id");
                 statementId = StrUtil.join(StrUtil.DOT, namespace, statementId);
@@ -91,15 +95,104 @@ public class XmlConfigurationBuilder extends BaseBuilder {
                     sql = sql.replace(g1, "?");
                 }
 
-                MappedStatement mappedStatement = MappedStatement.builder()
-                        .id(statementId).parameterType(parameterType)
-                        .resultType(resultType).sqlCommandType(SqlCommandType.SELECT)
-                        .sql(sql).parameterMap(parameterMap)
+                BoundSql boundSql = BoundSql.builder().sql(sql).parameterType(parameterType)
+                        .parameterMap(parameterMap).resultType(resultType)
                         .build();
+                MappedStatement mappedStatement = MappedStatement.builder()
+                        .id(statementId).sqlCommandType(SqlCommandType.SELECT)
+                        .boundSql(boundSql).build();
+
                 configuration.addMappedStatement(mappedStatement);
             }
             configuration.addMapper(Class.forName(namespace));
         };
 
+    }
+
+    /**
+     * resolve environments tag of XML
+     * @param environmentsElement
+     */
+    private void parseEnvironment(Element environmentsElement) throws Exception {
+        if (Objects.isNull(environmentsElement)) {
+            return;
+        }
+
+        Environment defaultEnvironment = configuration.getEnvironment();
+
+        // id
+        String defaultEnvironmentId = environmentsElement.attributeValue("default");
+        defaultEnvironment.setId(defaultEnvironmentId);
+
+        List<Element> environmentElements = environmentsElement.elements("environment");
+        for (int i = 0; i < environmentElements.size(); i++) {
+            Element environmentElement = environmentElements.get(i);
+            String environmentId = environmentElement.attributeValue("id");
+            if (!defaultEnvironmentId.equals(environmentId)) {
+                continue;
+            }
+
+            // transactionManager
+            Element transactionManagerElement = environmentElement.element("transactionManager");
+            String transactionType = transactionManagerElement.attributeValue("type");
+            TypeAliasesRegistry typeAliasesRegistry = configuration.getTypeAliasesRegistry();
+            Class<?> transactionClass = typeAliasesRegistry.resolveAlias(transactionType);
+            TransactionFactory transactionFactory = (TransactionFactory) transactionClass.getDeclaredConstructor().newInstance();
+            defaultEnvironment.setTransactionManager(transactionFactory);
+
+            // datasource
+            Element dataSourceElement = environmentElement.element("dataSource");
+            Class<?> dataSourceType = typeAliasesRegistry.resolveAlias(dataSourceElement.attributeValue("type"));
+            DataSourceFactory dataSourceFactory = (DataSourceFactory) dataSourceType.getDeclaredConstructor().newInstance();
+            Properties properties = new Properties();
+            dataSourceElement.elements("property").forEach(p -> {
+                properties.setProperty(p.attributeValue("name"), p.attributeValue("value"));
+            });
+            dataSourceFactory.setProperties(properties);
+            DataSource dataSource = dataSourceFactory.getDataSource();
+            defaultEnvironment.setDataSource(dataSource);
+
+        }
+
+    }
+
+    /**
+     * resolve typeAliases tag of XML
+     * @param typeAliasesElement
+     */
+    private void parseTypeAlias(Element typeAliasesElement) {
+        if (Objects.isNull(typeAliasesElement)) {
+            return;
+        }
+
+        TypeAliasesRegistry typeAliasesRegistry = configuration.getTypeAliasesRegistry();
+
+        // <typeAlias>
+        List<Element> typeAliasElements = typeAliasesElement.elements("typeAlias");
+        for (int i = 0; i < typeAliasElements.size(); i++) {
+            Element typeAliasElement = typeAliasElements.get(i);
+            String alias = typeAliasElement.attributeValue("alias");
+            String type = typeAliasElement.attributeValue("type");
+            Class<?> clazz;
+            try {
+                clazz = Class.forName(type);
+            } catch (Exception e) {
+                throw new RuntimeException("could not resolve class :" + type);
+            }
+            typeAliasesRegistry.registerAlias(alias, clazz);
+        }
+
+        // <package>
+        List<Element> packageElements = typeAliasesElement.elements("package");
+        for (int i = 0; i < packageElements.size(); i++) {
+            Element packageElement = packageElements.get(i);
+            String packageName = packageElement.attributeValue("name");
+            Set<Class<?>> classes = ClassUtil.scanPackage(packageName);
+            classes.forEach(c -> {
+                String className = c.getSimpleName();
+                String alisa = className.substring(0,1)+className.substring(1);
+                typeAliasesRegistry.registerAlias(alisa, c);
+            });
+        }
     }
 }

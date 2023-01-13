@@ -15,9 +15,6 @@ import java.util.Map;
 public class MappedStatement {
 
     private String id;
-    private String resultType;
-    private String parameterType;
-    private Map<Integer, String> parameterMap;
-    private String sql;
+    private BoundSql boundSql;
     private SqlCommandType sqlCommandType;
 }
