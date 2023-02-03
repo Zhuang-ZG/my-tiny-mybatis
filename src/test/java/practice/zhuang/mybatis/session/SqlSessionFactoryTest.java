@@ -27,9 +27,10 @@ class SqlSessionFactoryTest {
         SqlSession sqlSession = sqlSessionFactory.openSession();
 
         UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
-        User user = userMapper.find("1002");
-
-        log.info(JSONUtil.toJsonStr(user));
+        for (int i = 0; i < 50; i++) {
+            User user = userMapper.find("1002");
+            log.info(JSONUtil.toJsonStr(user));
+        }
     }
 
 }
