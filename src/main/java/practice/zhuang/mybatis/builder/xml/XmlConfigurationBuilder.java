@@ -138,7 +138,7 @@ public class XmlConfigurationBuilder extends BaseBuilder {
             TypeAliasesRegistry typeAliasesRegistry = configuration.getTypeAliasesRegistry();
             Class<?> transactionClass = typeAliasesRegistry.resolveAlias(transactionType);
             TransactionFactory transactionFactory = (TransactionFactory) transactionClass.getDeclaredConstructor().newInstance();
-            defaultEnvironment.setTransactionManager(transactionFactory);
+            defaultEnvironment.setTransactionFactory(transactionFactory);
 
             // datasource
             Element dataSourceElement = environmentElement.element("dataSource");

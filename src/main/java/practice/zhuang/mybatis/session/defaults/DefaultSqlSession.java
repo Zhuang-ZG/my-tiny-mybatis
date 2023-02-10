@@ -1,6 +1,8 @@
 package practice.zhuang.mybatis.session.defaults;
 
 import cn.hutool.core.util.StrUtil;
+import practice.zhuang.mybatis.executor.Executor;
+import practice.zhuang.mybatis.executor.SimpleExecutor;
 import practice.zhuang.mybatis.mapping.BoundSql;
 import practice.zhuang.mybatis.mapping.Environment;
 import practice.zhuang.mybatis.mapping.MappedStatement;
@@ -21,9 +23,11 @@ import java.util.Locale;
 public class DefaultSqlSession implements SqlSession {
 
     private Configuration configuration;
+    private Executor executor;
 
-    public DefaultSqlSession(Configuration configuration) {
+    public DefaultSqlSession(Configuration configuration, Executor executor) {
         this.configuration = configuration;
+        this.executor = executor;
     }
 
     @Override
@@ -34,23 +38,8 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statementId, Object parameter) {
-        try {
-            MappedStatement statement = configuration.getMappedStatement(statementId);
-            Environment environment = configuration.getEnvironment();
-
-            Connection connection = environment.getDataSource().getConnection();
-
-            BoundSql boundSql = statement.getBoundSql();
-            PreparedStatement preparedStatement = connection.prepareStatement(boundSql.getSql());
-            preparedStatement.setString(1, ((Object[]) parameter)[0].toString());
-            ResultSet resultSet = preparedStatement.executeQuery();
-            List<T> objects = result2Object(resultSet, Class.forName(boundSql.getResultType()));
-
-            return objects.get(0);
-
-        } catch (Exception e) {
-            throw new RuntimeException("execute sql failed.", e);
-        }
+        List<T> query = executor.query(statementId, parameter);
+        return query.get(0);
     }
 
     private <T> List<T> result2Object(ResultSet resultSet, Class<?> clazz) {

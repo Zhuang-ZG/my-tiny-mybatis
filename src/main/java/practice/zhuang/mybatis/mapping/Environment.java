@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import practice.zhuang.mybatis.datasource.DataSourceFactory;
 import practice.zhuang.mybatis.transaction.TransactionFactory;
 
 import javax.sql.DataSource;
@@ -24,5 +23,5 @@ public final class Environment {
 
     private DataSource dataSource;
 
-    private TransactionFactory transactionManager;
+    private TransactionFactory transactionFactory;
 }
