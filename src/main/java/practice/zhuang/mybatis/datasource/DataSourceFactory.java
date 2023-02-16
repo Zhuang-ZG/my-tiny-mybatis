@@ -15,7 +15,7 @@ public interface DataSourceFactory {
      * @param properties
      * @return
      */
-    Properties setProperties(Properties properties);
+    void setProperties(Properties properties);
 
     /**
      * get datasource instance

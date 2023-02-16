@@ -16,9 +16,8 @@ public class DruidDataSourceFactory implements DataSourceFactory {
     private Properties properties;
 
     @Override
-    public Properties setProperties(Properties properties) {
+    public void setProperties(Properties properties) {
         this.properties = properties;
-        return this.properties;
     }
 
     @Override
